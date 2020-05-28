@@ -1,5 +1,5 @@
 import random
-import pprint
+from classes.inventory import Item
 
 class bcolors:
     HEADER = '\033[95m'
@@ -13,6 +13,7 @@ class bcolors:
 
 
 class Person:
+
     def __init__(self, name, hp, mp, atk, df, magic, items):
         self.maxhp = hp
         self.hp = hp
@@ -23,11 +24,17 @@ class Person:
         self.df = df
         self.magic = magic
         self.items = items
-        self.actions = ["Attack", "Magic", "Items"]
         self.name = name
+        self.actions = ["Attack", "Magic", "Items"]
+
 
     def generate_damage(self):
         return random.randrange(self.atkl, self.atkh)
+
+    def heal(self, dmg):
+        self.hp += dmg
+        if self.hp > self.maxhp:
+            self.hp = self.maxhp
 
     def take_damage(self, dmg):
         self.hp -= dmg
@@ -35,10 +42,8 @@ class Person:
             self.hp = 0
         return self.hp
 
-    def heal(self, dmg):
-        self.hp += dmg
-        if self.hp > self.maxhp:
-            self.hp = self.maxhp
+    def reduce_mp(self, cost):
+        self.mp -= cost
 
     def get_hp(self):
         return self.hp
@@ -52,15 +57,12 @@ class Person:
     def get_max_mp(self):
         return self.maxmp
 
-    def reduce_mp(self, cost):
-        self.mp -= cost
-
     def choose_action(self):
         i = 1
         print("\n" + "    " + bcolors.BOLD + self.name + bcolors.ENDC)
         print(bcolors.OKBLUE + bcolors.BOLD + "    ACTIONS:" + bcolors.ENDC)
         for item in self.actions:
-            print("        " + str(i) + ".", item)
+            print("        " + str(i) + ":", item)
             i += 1
 
     def choose_magic(self):
@@ -68,7 +70,7 @@ class Person:
 
         print("\n" + bcolors.OKBLUE + bcolors.BOLD + "    MAGIC:" + bcolors.ENDC)
         for spell in self.magic:
-            print("       " + str(i) + ".", spell.name, "(cost:", str(spell.cost) + ")")
+            print("       " + str(i) + ":", spell.name, "(cost:", str(spell.cost) + ")")
             i += 1
 
     def choose_item(self):
@@ -105,8 +107,8 @@ class Person:
         hp_string = str(self.hp) + "/" + str(self.maxhp)
         current_hp = ""
 
-        if len(hp_string) < 7:
-            decreased = 9 - len(hp_string)
+        if len(hp_string) < 11:
+            decreased = 11 - len(hp_string)
 
             while decreased > 0:
                 current_hp += " "
@@ -147,7 +149,6 @@ class Person:
 
         if len(hp_string) < 9:
             decreased = 9 - len(hp_string)
-
             while decreased > 0:
                 current_hp += " "
                 decreased -= 1
@@ -175,7 +176,15 @@ class Person:
               current_hp + " |" + bcolors.OKGREEN + hp_bar + bcolors.ENDC + "|   " +
               current_mp + " |" + bcolors.OKBLUE + "█████████" + bcolors.ENDC + "|")
 
+    def choose_enemy_spell(self):
+        magic_choice = random.randrange(0, len(self.magic))
+        spell = self.magic[magic_choice]
+        magic_dmg = self.magic[magic_choice].generate_damage()
 
+        pct = self.hp / self.maxhp * 100
 
+        if self.mp < spell.cost or spell.type == "white" and pct > 50:
+            self.choose_enemy_spell()
+        else:
+            return spell, magic_dmg
 
-2
